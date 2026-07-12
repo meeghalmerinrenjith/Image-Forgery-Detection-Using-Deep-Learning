@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>PixelTruth — Image Forgery Detection</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+  <div class="grid-bg"></div>
+  <div class="scanline-overlay"></div>
+
+  <div class="container">
+
+    <header class="header">
+      <div class="badge">PIXELTRUTH v2.0</div>
+      <h1>Image Forgery<br><span>Detection</span></h1>
+    </header>
+
+    {% with messages = get_flashed_messages() %}
+      {% if messages %}
+        <div class="flash-messages">
+          {% for message in messages %}
+            <div class="flash-msg">⚠ {{ message }}</div>
+          {% endfor %}
+        </div>
+      {% endif %}
+    {% endwith %}
+
+    <form action="/" method="POST" enctype="multipart/form-data" onsubmit="startAnalysis()">
+      <div class="card">
+
+        <div id="dropZone" class="drop-zone">
+          <div class="drop-content">
+            <div class="upload-icon">
+              <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
+                <polyline points="17 8 12 3 7 8"/>
+                <line x1="12" y1="3" x2="12" y2="15"/>
+              </svg>
+            </div>
+            <div class="main-text">Drop image(s) here</div>
+            <div class="sub-text">or click to browse — select multiple for batch analysis</div>
+            <div class="type-pills">
+              <span>PNG</span><span>JPG</span><span>JPEG</span>
+            </div>
+          </div>
+          <input type="file" name="file" accept="image/png, image/jpeg" multiple required onchange="previewImages(event)">
+        </div>
+
+        <div id="scanContainer" class="scan-container hidden">
+          <div id="previewGrid" class="preview-grid"></div>
+          <div class="img-label" id="previewLabel">IMAGE LOADED — READY FOR ANALYSIS</div>
+        </div>
+
+        <button id="analyzeBtn" type="submit" class="analyze-btn">
+          <span class="btn-text">Run Analysis</span>
+          <span class="btn-icon">→</span>
+        </button>
+
+        <div id="loader" class="loader hidden">
+          <div class="loader-bar"></div>
+          <div class="loader-text">ANALYZING IMAGE<span class="dots">...</span></div>
+        </div>
+
+      </div>
+    </form>
+
+    <footer class="footer">
+      <span>Powered by MobileNetV2 + ELA Preprocessing</span>
+    </footer>
+
+  </div>
+
+<script>
+function previewImages(event) {
+  const files = event.target.files;
+  const grid  = document.getElementById("previewGrid");
+  const label = document.getElementById("previewLabel");
+  grid.innerHTML = "";
+
+  Array.from(files).forEach(file => {
+    const wrapper = document.createElement("div");
+    wrapper.className = "preview-thumb-wrapper";
+
+    const img = document.createElement("img");
+    img.src   = URL.createObjectURL(file);
+    img.className = "preview-thumb";
+
+    const tl = document.createElement("div"); tl.className = "corner tl";
+    const tr = document.createElement("div"); tr.className = "corner tr";
+    const bl = document.createElement("div"); bl.className = "corner bl";
+    const br = document.createElement("div"); br.className = "corner br";
+
+    wrapper.appendChild(img);
+    wrapper.appendChild(tl);
+    wrapper.appendChild(tr);
+    wrapper.appendChild(bl);
+    wrapper.appendChild(br);
+    grid.appendChild(wrapper);
+  });
+
+  label.textContent = files.length > 1
+    ? `${files.length} IMAGES LOADED — READY FOR BATCH ANALYSIS`
+    : "IMAGE LOADED — READY FOR ANALYSIS";
+
+  document.getElementById("dropZone").style.display = "none";
+  document.getElementById("scanContainer").classList.remove("hidden");
+}
+
+function startAnalysis() {
+  document.getElementById("loader").classList.remove("hidden");
+  document.getElementById("analyzeBtn").style.display = "none";
+  animateDots();
+}
+
+function animateDots() {
+  const dots = document.querySelector(".dots");
+  let count = 0;
+  setInterval(() => {
+    count = (count + 1) % 4;
+    dots.textContent = ".".repeat(count);
+  }, 400);
+}
+</script>
+
+</body>
+</html>

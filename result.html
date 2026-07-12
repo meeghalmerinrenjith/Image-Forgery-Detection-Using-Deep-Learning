@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Result — PixelTruth</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+  <div class="grid-bg"></div>
+  <div class="scanline-overlay"></div>
+
+  <div class="container" style="{{ 'max-width: 860px;' if is_batch else '' }}">
+
+    <header class="header">
+      <div class="badge">{{ 'BATCH ANALYSIS COMPLETE' if is_batch else 'ANALYSIS COMPLETE' }}</div>
+      <h1>Forgery Analysis<br><span>Report</span></h1>
+    </header>
+
+    {% if is_batch %}
+    <!-- ── BATCH VIEW ── -->
+
+    <div class="batch-summary">
+      <div class="summary-stat">
+        <div class="stat-value">{{ results | length }}</div>
+        <div class="stat-label">TOTAL IMAGES</div>
+      </div>
+      <div class="summary-stat">
+        <div class="stat-value authentic">{{ results | selectattr('result', 'equalto', 'authentic') | list | length }}</div>
+        <div class="stat-label">AUTHENTIC</div>
+      </div>
+      <div class="summary-stat">
+        <div class="stat-value forged">{{ results | selectattr('result', 'equalto', 'forged') | list | length }}</div>
+        <div class="stat-label">FORGED</div>
+      </div>
+    </div>
+
+    <div class="batch-grid">
+      {% for item in results %}
+      <div class="batch-card {{ item.result }}">
+
+        <div class="batch-img-wrapper">
+          <img src="{{ url_for('static', filename='uploads/' + item.filename) }}"
+               alt="{{ item.filename }}" class="batch-img">
+          <div class="corner tl"></div>
+          <div class="corner tr"></div>
+          <div class="corner bl"></div>
+          <div class="corner br"></div>
+        </div>
+
+        <div class="batch-info">
+          <div class="batch-filename">{{ item.filename }}</div>
+          <div class="batch-verdict {{ item.result }}">
+            {% if item.result == "forged" %}
+              <span>✗</span> FORGED
+            {% else %}
+              <span>✓</span> AUTHENTIC
+            {% endif %}
+          </div>
+          <div class="batch-conf-bar">
+            <div class="batch-conf-fill {{ item.result }}" style="width: {{ item.confidence }}%"></div>
+          </div>
+          <div class="batch-conf-label">{{ item.confidence }}% confidence</div>
+        </div>
+
+      </div>
+      {% endfor %}
+    </div>
+
+    <a href="/" class="retry-btn" style="margin-top: 32px;">
+      ← Analyze More Images
+    </a>
+
+    {% else %}
+    <!-- ── SINGLE VIEW ── -->
+
+    <div class="card result-card {{ results[0].result }}">
+
+      <div class="verdict-block">
+        <div class="verdict-label">VERDICT</div>
+        <div class="verdict {{ results[0].result }}">
+          {% if results[0].result == "forged" %}
+            <span class="verdict-icon">✗</span> FORGED
+          {% else %}
+            <span class="verdict-icon">✓</span> AUTHENTIC
+          {% endif %}
+        </div>
+        <div class="verdict-desc">
+          {% if results[0].result == "forged" %}
+            Signs of tampering or manipulation detected in this image.
+          {% else %}
+            No signs of manipulation detected. Image appears genuine.
+          {% endif %}
+        </div>
+      </div>
+
+      <div class="divider"></div>
+
+      <div class="confidence-block">
+        <div class="conf-header">
+          <span class="conf-label">CONFIDENCE SCORE</span>
+          <span class="conf-value">{{ results[0].confidence }}%</span>
+        </div>
+        <div class="confidence-bar">
+          <div class="confidence-fill {{ results[0].result }}" style="width: {{ results[0].confidence }}%"></div>
+        </div>
+        <div class="conf-scale">
+          <span>0%</span><span>50%</span><span>100%</span>
+        </div>
+      </div>
+
+      <div class="divider"></div>
+
+      <div class="img-section">
+        <div class="img-label">ANALYZED IMAGE</div>
+        <div class="img-wrapper result-img-wrapper">
+          <img src="{{ url_for('static', filename='uploads/' + results[0].filename) }}"
+               alt="Analyzed image" class="preview">
+          <div class="corner tl"></div>
+          <div class="corner tr"></div>
+          <div class="corner bl"></div>
+          <div class="corner br"></div>
+        </div>
+      </div>
+
+      <a href="/" class="retry-btn">
+        ← Analyze Another Image
+      </a>
+
+    </div>
+
+    {% endif %}
+
+    <footer class="footer">
+      <span>Powered by MobileNetV2 + ELA Preprocessing</span>
+    </footer>
+
+  </div>
+
+</body>
+</html>
